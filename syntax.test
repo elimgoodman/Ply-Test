@@ -1,0 +1,274 @@
+handle = File("/tmp/foo")
+contents = get_contents handle
+print contents
+
+---------------------------
+
+import io.file
+
+handle = io.file.File "/tmp/foo"
+contents = io.file.get_contents handle
+print contents
+
+----------------------------
+
+import io.file as f
+
+main touches f.Filesystem = 
+	handle = f.File "/tmp/foo"
+	contents = f.get_contents handle
+	print contents
+	
+----------------------------
+
+import io.file as f
+
+String get_file_contents(String filename) {
+	handle = f.File filename
+	return f.get_contents handle
+}
+
+None main()::f.Filesystem {
+	print get_file_contents "/tmp/foo"
+}
+
+----------------------------
+
+import io.file as f
+import io
+
+get_file_contents = (filename:String)::f.Filesystem -> String:
+	handle = f.File filename
+	return f.get_contents handle
+
+
+__main__ = ()::f.Filesystem -> None:
+	io.log get_file_contents "/tmp/foo"
+	
+----------------------------
+
+import io.file as f
+import io
+
+relax io.Console //won't warn when trying to access this piece of state
+
+get_file_contents::f.Filesystem -> String:
+	(filename:String) >>
+		handle = f.File filename
+		f.get_contents handle
+	(handle:f.File) >> 
+		f.get_contents handle
+	
+__main__::f.Filesystem -> None:
+	() >> 
+		io.log get_file_contents "/tmp/foo"
+		io.log get_file_contents (f.File "/tmp/bar") //this should work too
+
+//^^^ this whole overloading thing seems like overkill...
+----------------------------
+
+import io.file as f
+import io
+
+relax io.Console //won't warn when trying to access this piece of state
+
+get_file_contents = (filename:String)::f.Filesystem -> String:
+	f.get_contents (f.File filename)
+
+__main__ = ()::f.Filesystem -> None:
+	io.log (get_file_contents "/tmp/foo")	
+
+----------------------------
+
+import seq
+import io.file as f
+import io
+
+//file format is first_name, last_name, age
+
+relax io.Console //won't warn when trying to access this piece of state
+
+__main__ = ()::f.Filesystem -> None:
+	handle = f.File "/tmp/foo"
+	lines = f.read_lines handle
+	first_names = map ((line:Array): line[0]), lines //I don't like this
+	io.log (seq.join first_names " , ") //nor this, really
+
+----------------------------
+
+import seq
+import io.file as f
+import io
+
+//file format is first_name, last_name, age
+
+relax io.Console //won't warn when trying to access this piece of state
+
+Person = {{
+	first_name:String,
+	last_name:String,
+	age:Integer
+}}
+
+__main__ = ():None::f.Filesystem ->
+	handle = f.File "/tmp/foo"
+	lines = f.read_lines handle
+	first_names = map (line) -> line[0], lines //better!
+	io.log (seq.join first_names " , ") //nor this, really
+
+----------------------------
+
+import seq
+import io.file as f
+import io
+
+//file format is first_name, last_name, age
+
+relax io.Console //won't warn when trying to access this piece of state
+
+Person = {{
+	first_name:String,
+	last_name:String,
+	age:Integer
+}}
+
+__main__ = ():None::f.Filesystem ->
+	handle = f.File "/tmp/foo"
+	lines = f.read_lines handle
+	people = map ((line) -> Person line[0], line[1], line[2]), lines //yuck
+	first_names = map (person) -> first_name person, people //nice...
+	io.log (seq.join first_names " , ") //nor this, really
+
+----------------------------
+
+import seq
+import io.file as f
+import io
+
+//file format is first_name, last_name, age
+
+relax io.Console //won't warn when trying to access this piece of state
+
+Person = {{
+	first_name:String,
+	last_name:String,
+	age:Integer
+}}
+
+__main__ = ():None::f.Filesystem ->
+	handle = f.File "/tmp/foo"
+	lines = f.read_lines handle
+	people = map ((line) -> Person line, lines //can just instantiate data from array...? what mechanism allows this to work?
+	first_names = map (person) -> first_name person, people //nice...
+	io.log (seq.join first_names " , ") //nor this, really
+
+----------------------------
+
+import io.file as f
+import io
+
+//file format is first_name, last_name, age
+
+relax io.Console //won't warn when trying to access this piece of state
+
+Person = {{
+	first_name:String,
+	last_name:String,
+	age:Integer
+}}
+
+//^^ this creates the data structure "Person", the fns "first_name", etc, the fn "Person", and the types "FirstName", etc
+//Maybe it's actually a little module....?
+
+FirstNames = Array<Person.FirstName> //you could say String instead of Person.FirstName, but why wouldja?
+//^^ first time using the dot syntax (except for on modules).... what does it mean?
+People = Array<Person>
+
+get_first_names = (people:People):FirstNames -> 
+	map (person) -> first_name person, people
+
+__main__ = ():None::f.Filesystem ->
+	lines = f.read_lines (f.File "/tmp/foo")
+	people = map ((line) -> Person line, lines
+	first_names = get_first_names people
+	io.log (join first_names " , ")
+
+----------------------------
+
+///this version is gonna be verbose as fuck
+import io.file as f
+import io
+
+relax io.Console
+
+Person = data ->
+	first_name:String,
+	last_name:String,
+	age:Integer
+
+FirstNames = type -> Array<Person.FirstName> //you could say String instead of Person.FirstName, but why wouldja?
+People = type -> Array<Person>
+
+get_first_names = fn(people:People) returns FirstNames -> 
+	map (person) -> first_name person, people
+
+__main__ = () returns None touches f.Filesystem ->
+	lines = f.read_lines (f.File "/tmp/foo")
+	people = map ((line) -> Person line, lines
+	first_names = get_first_names people
+	io.Console.log (join first_names " , ")
+	
+----------------------------
+
+///this version is gonna be even verboser
+import io.file as f
+import io
+
+relax io.Console
+
+data Person {
+	@String first_name,
+	@String last_name,
+	@Integer age
+	String speak() ->
+		this.first_name + " says hi!"
+}
+
+type FirstNames = Array<Person.FirstName>
+type People = Array<Person>
+
+FirstNames getFirstNames(People people) -> 
+	map \person -> person.first_name, people
+
+None __main__()::f.Filesystem ->
+	lines = f.readLines (f.File "/tmp/foo")
+	people = map \line -> Person.new line, lines
+	first_names = getFirstNames people
+	io.Console.log (join first_names " , ")
+	
+//^^ what I don't like about this is the fact that you can't assign functions - they just get sort of "declared." However, 
+//the data and type syntaxes are nice...
+
+
+------------------------------------
+/* What concepts do we need?
+* - symbols/variables
+* - blocks/anonymous functions
+* - type aliases
+* - structs/datatypes
+* - assignment
+* - error handling of some kind
+* - basic datatypes
+    - list
+    - dict
+    - string 
+    - int 
+    - bool
+    - float
+    - none
+- state
+- modules
+
+Ok - everything is an (immutable) struct. There are no functions, just instantiations of the Block struct. Even the returns and touches fields should be slots on the struct, as should the actual list of statements. Typechecking/statefulness checking can happen via a generic framework for checking stuff at compile-time.
+
+*/
