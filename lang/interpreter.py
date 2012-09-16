@@ -6,8 +6,6 @@ class Interpeter(object):
     def interpet(self):
         scope = {}
 
-        #TODO: I think statement_list needs its own execute fn...
+        #TODO: I think statement_list needs its own evaluate fn...
         for stmt in self.statement_list.statements:
-            stmt.execute(scope)
-        
-        print scope
+            stmt.evaluate(scope)

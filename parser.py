@@ -81,14 +81,13 @@ def p_statement_assign(t):
     '''statement : VARNAME '=' expression'''
     t[0] = e.Assignment(e.Varname(t[1]), t[3])
 
-def p_expression_function_start(t):
+def p_expression_function_def(t):
     '''expression : FUNCTION '(' ')' '{' statement_list '}' '''
-    t[0] = e.Function(t[5])
+    t[0] = e.FunctionDef(t[5])
 
 def p_expression_varname(t):
     'expression : VARNAME'
     t[0] = e.Varname(t[1])
-
 
 def p_expression_number(t):
     'expression : NUMBER'
@@ -98,6 +97,18 @@ def p_expression_string(t):
     '''expression : STRING'''
     
     t[0] = e.String(t[1][1:-1])
+
+def p_execute_fn(t):
+    '''execute_fn : VARNAME '(' ')' '''
+    t[0] = e.FunctionEval(t[1])
+
+def p_statement_execute_fn(t):
+    '''statement : execute_fn '''
+    t[0] = t[1]
+
+def p_expression_execute_fn(t):
+    '''expression : execute_fn '''
+    t[0] = t[1]
 
 def p_error(t):
     if t is not None:
@@ -114,7 +125,7 @@ with open('first.test') as f:
     parsed = parser.parse(data, lexer=lexer)
 
     i = Interpeter(parsed)
-    print i.interpet()
+    i.interpet()
 
     #for tok in lexer:
         #print tok

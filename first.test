@@ -1,3 +1,8 @@
+$baz = function() {
+    $beep = "beeeep!"
+    print $beep
+}
+
 $foo = "hello word"
 $bar = "bye world"
-print $bar
+$baz()

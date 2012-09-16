@@ -5,9 +5,9 @@ _tabversion = '3.2'
 
 _lr_method = 'LALR'
 
-_lr_signature = '\x04\xdfax\xe9\xc6/0\x80J\xe2\x84o\xd0<\xa1'
+_lr_signature = '\xb7\xc8\x86\xe0\xcd&7<\n\xe2\x0bq\x93\\\xdf\x12'
     
-_lr_action_items = {'FUNCTION':([1,10,],[5,5,]),'STRING':([1,10,],[6,6,]),')':([12,],[14,]),'VARNAME':([0,1,2,4,6,7,8,9,10,11,13,15,16,17,],[3,8,-2,3,-8,-7,-6,-3,8,-1,-4,3,3,-5,]),'=':([3,],[10,]),'NUMBER':([1,10,],[7,7,]),'(':([5,],[12,]),'PRINT':([0,2,4,6,7,8,9,11,13,15,16,17,],[1,-2,1,-8,-7,-6,-3,-1,-4,1,1,-5,]),'{':([14,],[15,]),'}':([2,6,7,8,9,11,13,16,17,],[-2,-8,-7,-6,-3,-1,-4,17,-5,]),'$end':([2,4,6,7,8,9,11,13,17,],[-2,0,-8,-7,-6,-3,-1,-4,-5,]),}
+_lr_action_items = {'FUNCTION':([2,12,],[6,6,]),'STRING':([2,12,],[7,7,]),')':([13,15,],[17,18,]),'VARNAME':([0,1,2,3,5,7,8,9,10,11,12,14,16,17,19,20,21,],[4,-10,10,-2,4,-8,-11,-7,-6,-3,10,-1,-4,-9,4,4,-5,]),'=':([4,],[12,]),'NUMBER':([2,12,],[9,9,]),'(':([4,6,10,],[13,15,13,]),'PRINT':([0,1,3,5,7,8,9,10,11,14,16,17,19,20,21,],[2,-10,-2,2,-8,-11,-7,-6,-3,-1,-4,-9,2,2,-5,]),'{':([18,],[19,]),'}':([1,3,7,8,9,10,11,14,16,17,20,21,],[-10,-2,-8,-11,-7,-6,-3,-1,-4,-9,21,-5,]),'$end':([1,3,5,7,8,9,10,11,14,16,17,21,],[-10,-2,0,-8,-11,-7,-6,-3,-1,-4,-9,-5,]),}
 
 _lr_action = { }
 for _k, _v in _lr_action_items.items():
@@ -16,7 +16,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'statement_list':([0,15,],[4,16,]),'expression':([1,10,],[9,13,]),'statement':([0,4,15,16,],[2,11,2,11,]),}
+_lr_goto_items = {'statement_list':([0,19,],[5,20,]),'expression':([2,12,],[11,16,]),'execute_fn':([0,2,5,12,19,20,],[1,8,1,8,1,1,]),'statement':([0,5,19,20,],[3,14,3,14,]),}
 
 _lr_goto = { }
 for _k, _v in _lr_goto_items.items():
@@ -26,12 +26,15 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> statement_list","S'",1,None,None,None),
-  ('statement_list -> statement_list statement','statement_list',2,'p_statement_list','parser.py',129),
-  ('statement_list -> statement','statement_list',1,'p_statement_list','parser.py',130),
-  ('statement -> PRINT expression','statement',2,'p_statement_print','parser.py',144),
-  ('statement -> VARNAME = expression','statement',3,'p_statement_assign','parser.py',149),
-  ('expression -> FUNCTION ( ) { statement_list }','expression',6,'p_expression_function_start','parser.py',153),
-  ('expression -> VARNAME','expression',1,'p_expression_varname','parser.py',157),
-  ('expression -> NUMBER','expression',1,'p_expression_number','parser.py',162),
-  ('expression -> STRING','expression',1,'p_expression_string','parser.py',166),
+  ('statement_list -> statement_list statement','statement_list',2,'p_statement_list','parser.py',61),
+  ('statement_list -> statement','statement_list',1,'p_statement_list','parser.py',62),
+  ('statement -> PRINT expression','statement',2,'p_statement_print','parser.py',76),
+  ('statement -> VARNAME = expression','statement',3,'p_statement_assign','parser.py',81),
+  ('expression -> FUNCTION ( ) { statement_list }','expression',6,'p_expression_function_def','parser.py',85),
+  ('expression -> VARNAME','expression',1,'p_expression_varname','parser.py',89),
+  ('expression -> NUMBER','expression',1,'p_expression_number','parser.py',93),
+  ('expression -> STRING','expression',1,'p_expression_string','parser.py',97),
+  ('execute_fn -> VARNAME ( )','execute_fn',3,'p_execute_fn','parser.py',102),
+  ('statement -> execute_fn','statement',1,'p_statement_execute_fn','parser.py',106),
+  ('expression -> execute_fn','expression',1,'p_expression_execute_fn','parser.py',110),
 ]
