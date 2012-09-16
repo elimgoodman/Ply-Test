@@ -271,4 +271,91 @@ None __main__()::f.Filesystem ->
 
 Ok - everything is an (immutable) struct. There are no functions, just instantiations of the Block struct. Even the returns and touches fields should be slots on the struct, as should the actual list of statements. Typechecking/statefulness checking can happen via a generic framework for checking stuff at compile-time.
 
+So, that having been said, the fundamental actions are:
+- defining the structure of a struct 
+- creating a new instance of a struct 
+- binding a value to a symbol 
+- creating a symbol 
+
+- Even the act of making a new struct is actually making an instance of the struct called Struct and binding it to a symbol
+
+- what is at the bottom?
+    - primitives (int, bool, etc)
+    - some idea of "calling" a function - really, evaluating expressions
+    - some notion of branching
+    - some notion of looping
+    - some notion of constructing higher-order constructs that hold domain-specific information
+    - a knowledge of types
+    - a notion of an expression
+
+- Can even the notion of primitives and structs be unified?
 */
+
+//Type and Expr are built-in
+//What is Op? Where does it come from?
+
+//I dunno if this would actually be in code, but...
+
+Expr = struct {
+    Op op,
+    [Args] args //FIXME: wtf is this
+}
+
+Param = struct {
+    Type type,
+    String name
+}
+
+//If I do this, need anonymous fn and full-on Block
+Block = struct {
+    [Expr] exprs,
+    Scope scope, //how's this gonna work....
+    [Param] params,
+    Type returns,
+    State touches
+    "->": ([Expr] exprs) ->
+        (set this :exprs exprs)
+    "<<": ([Param] params) ->
+        (set this :params params)
+}
+
+//So then you could define an anonymous fn like this:
+greet = new Block(
+    params: [
+        new Param(name: first_name, type: String),
+        new Param(name: age, type: Integer)
+    ],
+    exprs: [
+        new Expr(op: return, args: "hello, " + first_name) 
+        //^^^HERE's where it gets fucked up - how does first_name get into the namespace here?
+    ],
+    returns: String,
+    touches: null
+)
+
+//So there has to be something special that params does in order to allow exprs to 
+//use what it provides as scope
+
+//Maybe there's another built-in called Scope....
+
+Thought: assignment is just manipulating scope 
+So maybe one of the fundamental operations is manipulating dictionaries/objects, as opposed to assignment
+Which would make scope a stateful object...
+
+Ugh, what was all that about....
+
+Let's try again, on blocks:
+
+some_block = :
+
+******
+Hm - so, I think there is some validity to the thinking above:
+
+- Statements can be defined as one-liners
+    - can all scope be inferred? there's probably a limit to this...
+    - similarly, how much typing can be inferred?
+- Statements can be executed with a Scope
+    - a scope is just a dict(string => Any)
+- a Block is a special construct that takes a scope that gets applied to each of its statements (when the Block is executed)
+
+
