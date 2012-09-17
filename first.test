@@ -1,8 +1,7 @@
-$baz = function() {
-    $beep = "beeeep!"
-    print $beep
+$baz = function($msg, $num) {
+    print $msg
+    print $num
 }
 
-$foo = "hello word"
-$bar = "bye world"
-$baz()
+$beep = "bye"
+$baz($beep, 2)

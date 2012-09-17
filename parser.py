@@ -13,13 +13,16 @@ tokens = (
 
 # Tokens
 
-literals = ['=', '(', ')', '{', '}']
+literals = ['=', '(', ')', '{', '}', ',']
 
-t_VARNAME = r'\$[a-zA-Z_][a-zA-Z0-9_]*'
 t_PRINT = r'print'
 t_FUNCTION = r'function'
 t_STRING = r'\"([^\\\n]|(\\.))*?\"'
-#t_FN = r'[a-zA-Z0-9_-]*'
+
+def t_VARNAME(t):
+    r'\$[a-zA-Z_][a-zA-Z0-9_]*'
+    t.value = e.Varname(t.value)
+    return t
 
 def t_NUMBER(t):
     r'\d+'
@@ -53,24 +56,23 @@ lexer = lex.lex(debug=debug)
     #('right','UMINUS'),
     #)
 
-#global things
-fn_expr_buffer = []
-names = { }
+def create_or_append(p, klass, primary_pos, secondary_pos):
+
+    if len(p) == 2 and p[1]:
+        p[0] = klass()
+        stmt = p[primary_pos]
+        p[0].append(stmt)
+    elif len(p) == (secondary_pos + 1):
+        p[0] = p[primary_pos]
+        if not p[0]: p[0] = klass()
+        if p[secondary_pos]:
+            stmt = p[secondary_pos]
+            p[0].append(stmt)
 
 def p_statement_list(p):
     '''statement_list : statement_list statement
                | statement'''
-
-    if len(p) == 2 and p[1]:
-       p[0] = e.StatementList()
-       stmt = p[1]
-       p[0].addStatement(stmt)
-    elif len(p) ==3:
-       p[0] = p[1]
-       if not p[0]: p[0] = e.StatementList()
-       if p[2]:
-           stat = p[2]
-           p[0].addStatement(stat)
+    create_or_append(p, e.StatementList, 1, 2)
 
 def p_statement_print(t):
     'statement : PRINT expression'
@@ -79,15 +81,21 @@ def p_statement_print(t):
 
 def p_statement_assign(t):
     '''statement : VARNAME '=' expression'''
-    t[0] = e.Assignment(e.Varname(t[1]), t[3])
+    t[0] = e.Assignment(t[1], t[3])
+
+def p_func_params(p):
+    '''func_params : func_params ',' VARNAME
+                    | VARNAME '''
+
+    create_or_append(p, e.ParamList, 1, 3)
 
 def p_expression_function_def(t):
-    '''expression : FUNCTION '(' ')' '{' statement_list '}' '''
-    t[0] = e.FunctionDef(t[5])
+    '''expression : FUNCTION '(' func_params ')' '{' statement_list '}' '''
+    t[0] = e.FunctionDef(t[3], t[6])
 
 def p_expression_varname(t):
     'expression : VARNAME'
-    t[0] = e.Varname(t[1])
+    t[0] = t[1]
 
 def p_expression_number(t):
     'expression : NUMBER'
@@ -98,9 +106,15 @@ def p_expression_string(t):
     
     t[0] = e.String(t[1][1:-1])
 
+def p_func_args(t):
+    '''func_args : func_args ',' expression
+                    | expression '''
+
+    create_or_append(t, e.ArgList, 1, 3)
+
 def p_execute_fn(t):
-    '''execute_fn : VARNAME '(' ')' '''
-    t[0] = e.FunctionEval(t[1])
+    '''execute_fn : VARNAME '(' func_args ')' '''
+    t[0] = e.FunctionEval(t[1], t[3])
 
 def p_statement_execute_fn(t):
     '''statement : execute_fn '''
@@ -123,7 +137,7 @@ with open('first.test') as f:
     data = f.read()
     lexer.input(data)
     parsed = parser.parse(data, lexer=lexer)
-
+    
     i = Interpeter(parsed)
     i.interpet()
 

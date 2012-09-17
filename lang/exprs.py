@@ -8,7 +8,7 @@ class StatementList(Expr):
     def __init__(self):
         self.statements = []
 
-    def addStatement(self, stmt):
+    def append(self, stmt):
         self.statements.append(stmt)
 
     def evaluate(self, scope):
@@ -43,7 +43,7 @@ class Assignment(Expr):
         return "%s = %s" % (self.left, self.right)
 
     def evaluate(self, scope):
-        scope[self.left.name] = self.right.evaluate(scope)
+        scope[self.left.get_name()] = self.right.evaluate(scope)
 
 class Varname(Expr):
 
@@ -52,6 +52,9 @@ class Varname(Expr):
 
     def evaluate(self, scope):
         return scope[self.name]
+
+    def get_name(self):
+        return self.name
 
     def __repr__(self):
         return "(VAR: %s)" % (self.name)
@@ -80,32 +83,67 @@ class String(Expr):
 
 class FunctionPromise(Expr):
     
-    def __init__(self, scope, statements):
+    def __init__(self, scope, fn_def):
         self.scope = scope
-        self.statements = statements
+        self.fn_def = fn_def
 
     def evaluate(self, scope):
-      scope.update(self.scope)
-      self.statements.evaluate(scope)
+        scope.update(self.scope)
+        self.fn_def.statements.evaluate(scope)
 
 class FunctionDef(Expr):
 
-    def __init__(self, statements):
+    def __init__(self, params, statements):
+        self.params = params
         self.statements = statements
     
     def evaluate(self, scope):
-        return FunctionPromise(scope, self.statements)
+        return FunctionPromise(scope, self)
 
     def __repr__(self):
-        return "(FN: %s)" % (self.statements)
+        return "(FN: %s -> %s)" % (self.params, self.statements)
 
 class FunctionEval(Expr):
 
-    def __init__(self, fn_name):
-        self.fn_name = fn_name
+    def __init__(self, fn_var_name, args):
+        self.fn_var_name = fn_var_name
+        self.args = args
     
     def evaluate(self, scope):
-        return scope[self.fn_name].evaluate(scope)
+        promise = scope[self.fn_var_name.get_name()]
+        scope = self.bring_args_into_scope(scope, promise.fn_def.params, self.args)
+        return promise.evaluate(scope)
+
+    def bring_args_into_scope(self, scope, params, args):
+
+        i = 0
+        for param in params.params:
+            scope[param.get_name()] = args.args[i].evaluate(scope)
+            i = i + 1
+
+        return scope
 
     def __repr__(self):
-        return "(EVAL FN: %s)" % (self.fn_name)
+        return "(EVAL FN: %s <- %s)" % (self.fn_name, self.args)
+
+class ParamList(Expr):
+
+    def __init__(self):
+        self.params = []
+
+    def append(self, param):
+        self.params.append(param)
+
+    def __repr__(self):
+        return "(PARAMS: %s)" % (self.params)
+
+class ArgList(Expr):
+
+    def __init__(self):
+        self.args = []
+
+    def append(self, arg):
+        self.args.append(arg)
+
+    def __repr__(self):
+        return "(ARGS: %s)" % (self.args)
